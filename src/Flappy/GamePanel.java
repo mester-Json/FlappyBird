@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,18 +12,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
-
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
 public class GamePanel extends JPanel {
     private static final long serialVersionUID = 1L;
-    private static final int PIPE_WIDTH = 50;
-    private static final int INITIAL_PIPE_SPEED = 5;
-    private static final int INCREASED_PIPE_SPEED = 8;
+    private static final int PIPE_WIDTH = 45;
+    private static final int INITIAL_PIPE_SPEED = 2;
     private static final int PIPE_GAP_INITIAL = 150;
-    private static final int PIPE_GAP_REDUCED = 100;
 
     private Bird bird;
     private List<Pipe> pipes;
@@ -33,6 +32,7 @@ public class GamePanel extends JPanel {
     private Font scoreFont;
     private int pipeSpeed;
     private int pipeGap;
+    private Image backgroundImage;
 
     public GamePanel() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -48,6 +48,8 @@ public class GamePanel extends JPanel {
         scoreFont = new Font("Arial", Font.BOLD, screenHeight / 30); 
         pipeSpeed = INITIAL_PIPE_SPEED;
         pipeGap = PIPE_GAP_INITIAL;
+
+        backgroundImage = new ImageIcon(getClass().getResource("/Flappy/background.png")).getImage();
 
         timer = new Timer(16, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -71,12 +73,11 @@ public class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
         render(g);
     }
 
     public void render(Graphics g) {
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, getWidth(), getHeight());
         bird.draw(g);
         for (Pipe pipe : pipes) {
             pipe.draw(g);
@@ -111,27 +112,21 @@ public class GamePanel extends JPanel {
         if (pipes.isEmpty() || pipes.get(pipes.size() - 1).getX() < getWidth() - 300) {
             generatePipes();
         }
-
-        updatePipeSpeed();
     }
 
     private void generatePipes() {
         if (pipeCounter % 2 == 0) {
             int randomGap = (int) (Math.random() * (pipeGap - 50)) + 50;
-            int randomHeight = (int) (Math.random() * (getHeight() - pipeGap - randomGap)) + randomGap;
+            int randomHeight = (int) (Math.random() * (getHeight() - pipeGap - 100)) + 100;
+            int displayWidth = PIPE_WIDTH *7;
 
-            pipes.add(new Pipe(getWidth(), 0, PIPE_WIDTH, randomHeight, pipeSpeed));
-            pipes.add(new Pipe(getWidth(), randomHeight + pipeGap, PIPE_WIDTH, getHeight() - randomHeight - pipeGap, pipeSpeed));
+
+            pipes.add(new Pipe(getWidth(), 0, PIPE_WIDTH, randomHeight, pipeSpeed, true, displayWidth));  
+            pipes.add(new Pipe(getWidth(), randomHeight + pipeGap, PIPE_WIDTH, getHeight() - randomHeight - pipeGap, pipeSpeed, false, displayWidth));  
         }
         pipeCounter++;
     }
 
-    private void updatePipeSpeed() {
-        if (score >= 30 && pipeSpeed == INITIAL_PIPE_SPEED) {
-            pipeSpeed = INCREASED_PIPE_SPEED;
-            pipeGap = PIPE_GAP_REDUCED;
-        }
-    }
 
     private void gameOver() {
         gameOver = true;

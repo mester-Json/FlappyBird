@@ -1,19 +1,23 @@
 package Flappy;
 
-import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Image;
+import javax.swing.ImageIcon;
 
 public class Bird {
     private int x, y, width, height;
     private int yVelocity;
     private static final int GRAVITY = 1;
+    private Image birdImage;
 
     public Bird(int x, int y) {
         this.x = x;
         this.y = y;
-        this.width = 30;
-        this.height = 30;
+        this.width = 70;
+        this.height = 70;
         this.yVelocity = 0;
+
+        birdImage = new ImageIcon(getClass().getResource("/Flappy/Bird.png")).getImage();
     }
 
     public void update() {
@@ -31,8 +35,7 @@ public class Bird {
     }
 
     public void draw(Graphics g) {
-        g.setColor(Color.BLUE);
-        g.fillRect(x, y, width, height);
+        g.drawImage(birdImage, x, y, width, height, null);
     }
 
     public boolean intersects(Pipe pipe) {
@@ -58,4 +61,3 @@ public class Bird {
         return height;
     }
 }
-
