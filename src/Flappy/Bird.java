@@ -17,7 +17,7 @@ public class Bird {
         this.height = 70;
         this.yVelocity = 0;
 
-        birdImage = new ImageIcon(getClass().getResource("/Flappy/Bird.png")).getImage();
+        birdImage = new ImageIcon(getClass().getResource("/Flappy/resources/Bird.png")).getImage();
     }
 
     public void update() {

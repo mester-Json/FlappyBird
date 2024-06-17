@@ -23,7 +23,7 @@ public class Pipe {
         this.isTopPipe = isTopPipe;
         this.displayWidth = displayWidth;
 
-        pipeImage = new ImageIcon(getClass().getResource("/Flappy/Pipe.png")).getImage();
+        pipeImage = new ImageIcon(getClass().getResource("/Flappy/resources/Pipe.png")).getImage();
     }
 
     public void update() {

@@ -16,6 +16,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import java.io.File;
+import java.io.IOException;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+
 
 public class GamePanel extends JPanel {
     private static final long serialVersionUID = 1L;
@@ -33,6 +41,8 @@ public class GamePanel extends JPanel {
     private int pipeSpeed;
     private int pipeGap;
     private Image backgroundImage;
+    private Clip clickSound;
+    private Clip scoreSound;
 
     public GamePanel() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -45,11 +55,23 @@ public class GamePanel extends JPanel {
         score = 0;
         pipeCounter = 0;
         gameOver = false;
-        scoreFont = new Font("Arial", Font.BOLD, screenHeight / 30); 
+        scoreFont = new Font("Arial", Font.BOLD, screenHeight / 30);
         pipeSpeed = INITIAL_PIPE_SPEED;
         pipeGap = PIPE_GAP_INITIAL;
 
-        backgroundImage = new ImageIcon(getClass().getResource("/Flappy/background.png")).getImage();
+        backgroundImage = new ImageIcon(getClass().getResource("/Flappy/resources/background.png")).getImage();
+
+        try {
+            AudioInputStream audioInClick = AudioSystem.getAudioInputStream(getClass().getResourceAsStream("/Flappy/resources/sfx_wing.wav"));
+            clickSound = AudioSystem.getClip();
+            clickSound.open(audioInClick);
+
+            AudioInputStream audioInScore = AudioSystem.getAudioInputStream(getClass().getResourceAsStream("/Flappy/resources/sfx_point.wav"));
+            scoreSound = AudioSystem.getClip();
+            scoreSound.open(audioInScore);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
 
         timer = new Timer(16, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -66,8 +88,29 @@ public class GamePanel extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 bird.flap();
+                playClickSound();
             }
         });
+    }
+
+    private void playClickSound() {
+        if (clickSound != null) {
+            if (clickSound.isRunning()) {
+                clickSound.stop();
+            }
+            clickSound.setFramePosition(0);
+            clickSound.start();
+        }
+    }
+
+    private void playScoreSound() {
+        if (scoreSound != null) {
+            if (scoreSound.isRunning()) {
+                scoreSound.stop();
+            }
+            scoreSound.setFramePosition(0);
+            scoreSound.start();
+        }
     }
 
     @Override
@@ -90,26 +133,41 @@ public class GamePanel extends JPanel {
 
     public void update() {
         bird.update();
+        
+        if (bird.getY() > getHeight() || bird.getY() < 0) {
+            gameOver();
+            return;
+        }
 
         List<Pipe> pipesToRemove = new ArrayList<>();
-        for (Pipe pipe : pipes) {
-            pipe.update();
-            if (bird.intersects(pipe)) {
+        for (int i = 0; i < pipes.size(); i += 2) {
+            Pipe topPipe = pipes.get(i);
+            Pipe bottomPipe = pipes.get(i + 1);
+
+            topPipe.update();
+            bottomPipe.update();
+
+            if (bird.intersects(topPipe) || bird.intersects(bottomPipe)) {
                 gameOver();
                 return;
             }
-            if (pipe.getX() + PIPE_WIDTH < bird.getX() && !pipe.isPassed()) {
-                pipe.setPassed(true);
+
+            if (topPipe.getX() + PIPE_WIDTH < bird.getX() && !topPipe.isPassed()) {
+                topPipe.setPassed(true);
+                bottomPipe.setPassed(true);
                 score++;
+                playScoreSound();
             }
-            if (pipe.getX() + PIPE_WIDTH < 0) {
-                pipesToRemove.add(pipe);
+
+            if (topPipe.getX() + PIPE_WIDTH < 0) {
+                pipesToRemove.add(topPipe);
+                pipesToRemove.add(bottomPipe);
             }
         }
 
         pipes.removeAll(pipesToRemove);
 
-        if (pipes.isEmpty() || pipes.get(pipes.size() - 1).getX() < getWidth() - 300) {
+        if (pipes.isEmpty() || pipes.get(pipes.size() - 2).getX() < getWidth() - 300) {
             generatePipes();
         }
     }
@@ -118,11 +176,11 @@ public class GamePanel extends JPanel {
         if (pipeCounter % 2 == 0) {
             int randomGap = (int) (Math.random() * (pipeGap - 50)) + 50;
             int randomHeight = (int) (Math.random() * (getHeight() - pipeGap - 100)) + 100;
-            int displayWidth = PIPE_WIDTH *7;
+            int displayWidth = PIPE_WIDTH * 7;
 
-
-            pipes.add(new Pipe(getWidth(), 0, PIPE_WIDTH, randomHeight, pipeSpeed, true, displayWidth));  
-            pipes.add(new Pipe(getWidth(), randomHeight + pipeGap, PIPE_WIDTH, getHeight() - randomHeight - pipeGap, pipeSpeed, false, displayWidth));  
+            pipes.add(new Pipe(getWidth(), 0, PIPE_WIDTH, randomHeight, pipeSpeed, true, displayWidth));
+            pipes.add(new Pipe(getWidth(), randomHeight + pipeGap, PIPE_WIDTH, getHeight() - randomHeight - pipeGap,
+                    pipeSpeed, false, displayWidth));
         }
         pipeCounter++;
     }
@@ -131,7 +189,8 @@ public class GamePanel extends JPanel {
     private void gameOver() {
         gameOver = true;
         timer.stop();
-        JOptionPane.showMessageDialog(this, "Game Over! Your score: " + score, "Game Over", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, "Game Over! Your score: " + score, "Game Over",
+                JOptionPane.INFORMATION_MESSAGE);
         resetGame();
     }
 
