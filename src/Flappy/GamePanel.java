@@ -35,7 +35,7 @@ public class GamePanel extends JPanel {
 
     private Bird bird;
     private List<Pipe> pipes;
-    private Timer timer;
+    private Timer timer; 
     private int score;
     private int pipeCounter;
     private boolean gameOver;
@@ -63,6 +63,7 @@ public class GamePanel extends JPanel {
         scoreFont = new Font("Arial", Font.BOLD, screenHeight / 30);
         pipeSpeed = INITIAL_PIPE_SPEED;
         pipeGap = PIPE_GAP_INITIAL;
+        
 
         backgroundImage = new ImageIcon(getClass().getResource("/Flappy/resources/background.png")).getImage();
 
@@ -86,13 +87,15 @@ public class GamePanel extends JPanel {
                 }
             }
         });
+        gameState = GameState.MENU;
         timer.start();
+    
 
         this.setFocusable(true);
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (gameState == GameState.PLAYING) {
+                if (gameState == GameState.PLAYING) {  
                     bird.flap();
                     playClickSound();
                 }
@@ -156,13 +159,14 @@ public class GamePanel extends JPanel {
 
         removeAllButtons();
 
+        
         JButton playButton = new JButton("Play");
         playButton.setBounds(getWidth() / 2 - 50, getHeight() / 2 - 50, 100, 50);
         playButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 gameState = GameState.PLAYING;
                 requestFocusInWindow();
-                removeAllButtons(); 
+                removeAllButtons();
             }
         });
         this.add(playButton);
@@ -200,14 +204,14 @@ public class GamePanel extends JPanel {
     }
 
     private void removeAllButtons() {
-        Component[] components = this.getComponents();
-        for (Component component : components) {
+        for (int i = getComponentCount() - 1; i >= 0; i--) {
+            Component component = getComponents()[i];
             if (component instanceof JButton) {
-                this.remove(component);
+                remove(component);
             }
         }
-        this.revalidate();
-        this.repaint();
+        revalidate();
+        repaint();
     }
     public void render(Graphics g) {
         bird.draw(g);
@@ -245,7 +249,7 @@ public class GamePanel extends JPanel {
                 topPipe.setPassed(true);
                 bottomPipe.setPassed(true);
                 score++;
-                playScoreSound();
+                playScoreSound(); 
             }
 
             if (topPipe.getX() + PIPE_WIDTH < 0) {
